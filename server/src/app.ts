@@ -2,13 +2,13 @@
 import express from 'express'
 
 import { configDotenv } from 'dotenv';
-import { userRouter } from './routes/authRoutes.ts';
+import { authRouter } from './routes/authRoutes.ts';
 
 configDotenv();
 
 
 const app = express();
-app.use("/api", userRouter)
+app.use("/api", authRouter)
 
 
 app.listen(3000, () => {

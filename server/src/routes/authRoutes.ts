@@ -1,8 +1,9 @@
 import { Router } from "express";
 import { prisma } from '../generated/prisma/prisma.ts';
-export const userRouter = Router();
+import { failureResponse, successResponse } from "../lib/response.ts";
+export const authRouter = Router();
 
-userRouter.get("/test", async (req, res) => {
+authRouter.get("/test", async (req, res) => {
     const test = await prisma.user.create({
         data: {
             firstName: "Suhas",
@@ -14,3 +15,4 @@ userRouter.get("/test", async (req, res) => {
     console.log(test)
     res.status(200).send("test")
 })
+
