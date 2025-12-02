@@ -1,26 +1,25 @@
 import { Router, type Request, type Response } from "express";
 import { prisma } from '../generated/prisma/prisma.ts';
 import { failureResponse, successResponse } from "../lib/response.ts";
-import { loginSchema, registerSchema } from "../zodSchemas/authSchemas.ts";
-export const authRouter = Router();
+import { loginSchema, profileSchema, registerSchema } from "../zodSchemas/authSchemas.ts";
 import bcrypt from 'bcryptjs';
-import { configDotenv } from "dotenv";
 import jwt from 'jsonwebtoken';
-configDotenv();
 
 if (!process.env.JWT_SECRET) throw new Error("Please ensure the JWT_SECRET exists in your environment")
-if (!process.env.SALT) throw new Error("Please ensure SALT exists in your environment")
-
+    if (!process.env.SALT) throw new Error("Please ensure SALT exists in your environment")
+        
 const SALT = Number(process.env.SALT);
 const SECRET = String(process.env.JWT_SECRET);
 
+interface DecodedUser {
+    id: string;
+    username: string;
+    iat: number;
+    exp: number;
+}
 
 
-
-
-authRouter.get("/test", (req: Request, res: Response) => {
-    return failureResponse(res, 400, "Invalid entry")
-})
+export const authRouter = Router();
 
 authRouter.post("/register", async (req: Request, res: Response) => {
     const formData = req.body
@@ -46,8 +45,12 @@ authRouter.post("/register", async (req: Request, res: Response) => {
             }
         })
         return successResponse(res, 201, newUser)
-    } catch (err: any) {
-        return failureResponse(res, 409, err.message)
+    } catch (err) {
+        if (err instanceof Error) {
+            console.log(err.message);
+            return failureResponse(res, 400, err.message);
+        }
+        return failureResponse(res, 400, "An unknown error occurred");
     }
 })
 
@@ -57,7 +60,7 @@ authRouter.post("/login", async (req: Request, res: Response) => {
     try {
         const inputValidation = loginSchema.safeParse(formData);
         if (!inputValidation.success) throw new Error("Failed to validate input")
-        const user = await prisma.user.findUnique({
+            const user = await prisma.user.findUnique({
             where: {username: formData.username},
             select: {
                 id: true,
@@ -68,13 +71,13 @@ authRouter.post("/login", async (req: Request, res: Response) => {
             },
         })
         if (!user) throw new Error("Invalid credentials")
-        const passwordMatch = await bcrypt.compare(formData.password, user.passwordHash)
+            const passwordMatch = await bcrypt.compare(formData.password, user.passwordHash)
         if (!passwordMatch) throw new Error("Invalid credentials")
-        const accessToken = jwt
-            .sign({id: user.id, username: user.username}, SECRET, {
-                expiresIn: 7 * 24 * 60 * 60,
-                
-            })
+            const accessToken = jwt
+        .sign({id: user.id, username: user.username}, SECRET, {
+            expiresIn: 7 * 24 * 60 * 60,
+            
+        })
         
         res.status(200).cookie("token", accessToken, {
             httpOnly: true,
@@ -84,8 +87,12 @@ authRouter.post("/login", async (req: Request, res: Response) => {
             data: {id: user.id, username: user.username, firstName: user.firstName, lastName: user.lastName}
         })
         
-    } catch (err: any) {
-        return failureResponse(res, 400, err.message)
+    } catch (err) {
+        if (err instanceof Error) {
+            console.log(err.message);
+            return failureResponse(res, 400, err.message);
+        }
+        return failureResponse(res, 400, "An unknown error occurred");
     }
 })
 
@@ -93,21 +100,50 @@ authRouter.post("/logout", async (req: Request, res: Response) => {
     try {
         
         if (!req.cookies.token) throw new Error("User not logged in")
-        successResponse(res.clearCookie("token"), 200, {})
+            successResponse(res.clearCookie("token"), 200)
         
-    } catch (err: any) {
-        return failureResponse(res, 400, err.message);
+    } catch (err) {
+        if (err instanceof Error) {
+            console.log(err.message);
+            return failureResponse(res, 400, err.message);
+        }
+        return failureResponse(res, 400, "An unknown error occurred");
     }
 })
 
 authRouter.get("/me", async (req: Request, res: Response) => {
     if (!req.cookies.token) return failureResponse(res, 400, "User not logged in")
-    const accessToken = req.cookies.token;
+        const accessToken = req.cookies.token;
     try {
-        const decodedUser = jwt.verify(accessToken, SECRET);
+        const decodedUser = jwt.verify(accessToken, SECRET) as DecodedUser;
         return successResponse(res, 200, decodedUser)
     } catch (err) {
         return failureResponse(res, 400, "Invalid token")
     }
     
+})
+
+authRouter.patch("/profile", async (req: Request, res: Response) => {
+    const formData = req.body;
+    try {
+        if (!req.cookies.token) throw new Error("User not logged in")
+            const accessToken = req.cookies.token;
+        if (!formData) throw new Error("Invalid input.")
+            const inputValidation = profileSchema.safeParse(formData);
+        if (!inputValidation.success) throw new Error("Invalid input")
+            const decodedUser = jwt.verify(accessToken, SECRET) as DecodedUser;
+        const modifiedUser = await prisma.user.update({
+            where: {
+                id: decodedUser.id
+            },
+            data: formData,
+        })
+        return successResponse(res, 204)
+    } catch (err) {
+        if (err instanceof Error) {
+            console.log(err.message);
+            return failureResponse(res, 400, err.message);
+        }
+        return failureResponse(res, 400, "An unknown error occurred");
+    }
 })

@@ -20,3 +20,13 @@ export const loginSchema = zod.object({
     username: zod.string().min(4).max(15),
     password: zod.string().min(3).max(10)
 })
+
+export const profileSchema = zod.object({
+    firstName: zod.string().min(3).max(10),
+    lastName: zod.string().min(3).max(10),
+}).refine(
+  (data) => data.firstName !== undefined || data.lastName !== undefined,
+  {
+    message: "At least one of First Name or Last Name must be provided",
+  }
+);
