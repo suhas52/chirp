@@ -5,8 +5,14 @@ import { failureResponse, successResponse } from "../lib/response.ts";
 import { profanity, CensorType } from '@2toad/profanity';
 import { postSchema } from "../zodSchemas/crudSchemas.ts";
 import { prisma } from "../generated/prisma/prisma.ts";
+import { dmmfToRuntimeDataModel } from "@prisma/client/runtime/client";
 
-
+interface DecodedUser {
+    id: string;
+    username: string;
+    iat: number;
+    exp: number;
+}
 
 export const userRouter = Router();
 
@@ -19,8 +25,18 @@ userRouter.post("/post", async (req: Request, res: Response) => {
         if (profanity.exists(formData.content)) throw new Error("Profanity is not allowed")
         const inputValidation = postSchema.safeParse(formData)
         if (!inputValidation.success) throw new Error("Invalid input")
+        const decodedUser = jwt.decode(accessToken) as DecodedUser;
         const newPost = await prisma.post.create({
-            data: formData
+            data: {
+                userId: decodedUser.id, ...formData
+            },
+            select: {
+                id: true,
+                content: true,
+                createdAt: true,
+                updatedAt: true,
+                userId: true
+            }
         })
         return successResponse(res, 201, newPost);
     } catch (err) {
