@@ -47,11 +47,27 @@ userRouter.post("/post", async (req: Request, res: Response) => {
     }
 })
 
-userRouter.get("/post/:userId", async (req: Request, res: Response) => {
+userRouter.get("/posts", async (req: Request, res: Response) => {
+    try {
+        const posts = prisma.post.findMany({
+            
+        })
+        return successResponse(res, 200, posts)
+    } catch (err) {
+        if (err instanceof Error) {
+            return failureResponse(res, 400, err.message)
+        }
+        return failureResponse(res, 400, "An unknown error occurred")
+    }
+})
+
+userRouter.get("/post/:postId", async (req: Request, res: Response) => {
 
 })
 
-userRouter.get("/posts", async (req: Request, res: Response) => {
+
+
+userRouter.get("/posts/:userId", async (req: Request, res: Response) => {
 
 })
 
