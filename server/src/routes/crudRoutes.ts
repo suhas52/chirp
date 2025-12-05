@@ -21,11 +21,11 @@ userRouter.post("/post", async (req: Request, res: Response) => {
     const accessToken = req.cookies.token;
     try {
         if (!accessToken) throw new Error("User is not logged in")
-            if (!formData) throw new Error("Invalid data")
-                if (profanity.exists(formData.content)) throw new Error("Profanity is not allowed")
-                    const inputValidation = postSchema.safeParse(formData)
+        if (!formData) throw new Error("Invalid data")
+        if (profanity.exists(formData.content)) throw new Error("Profanity is not allowed")
+        const inputValidation = postSchema.safeParse(formData)
         if (!inputValidation.success) throw new Error("Invalid input")
-            const decodedUser = jwt.decode(accessToken) as DecodedUser;
+        const decodedUser = jwt.decode(accessToken) as DecodedUser;
         const newPost = await prisma.post.create({
             data: {
                 userId: decodedUser.id, ...formData
@@ -62,7 +62,7 @@ userRouter.get("/posts", async (req: Request, res: Response) => {
 })
 
 userRouter.get("/post/:postId", async (req: Request, res: Response) => {
-    const postId = req.params['postId'];
+    const { postId } = req.params;
     try {
         if (!postId) throw new Error("Invalid request")
             const post = await prisma.post.findUnique({
@@ -82,7 +82,7 @@ userRouter.get("/post/:postId", async (req: Request, res: Response) => {
 
 
 userRouter.get("/posts/:userId", async (req: Request, res: Response) => {
-    const userId = req.params['userId'];
+    const { userId } = req.params;
     try {
         if (!userId) throw new Error("Invalid Request")
         const posts = await prisma.post.findMany({
@@ -100,9 +100,46 @@ userRouter.get("/posts/:userId", async (req: Request, res: Response) => {
 })
 
 userRouter.post("/comment/:postId", async (req: Request, res: Response) => {
-    
+    const formData = req.body;
+    const { postId } = req.params;
+    const accessToken = req.cookies.token;
+    try {
+        
+        if (!postId) throw new Error("Invalid Request")
+        if (!accessToken) throw new Error("You cannot comment without being logged in");
+        if (!formData) throw new Error("Unable to post an empty form")
+        if (profanity.exists(formData.content)) throw new Error("Profanity is not allowed")
+        const decodedUser = jwt.decode(accessToken) as DecodedUser;
+        const newComment = await prisma.comment.create({
+            data: {
+                userId: decodedUser.id,
+                postId: postId,
+                content: formData.content
+            }
+        })
+        return successResponse(res, 201, newComment) 
+    } catch (err) {
+        if (err instanceof Error) {
+            return failureResponse(res, 400, err.message)
+        } 
+        return failureResponse(res, 400, "An unknown error occurred")
+    }
 })
 
 userRouter.get("/comments/:postId", async (req: Request, res: Response) => {
-    
+    const { postId } = req.params;
+    try {
+        if (!postId) throw new Error("Invalid request")
+        const comments = await prisma.comment.findMany({
+            where: {
+                postId: postId
+            },
+        })
+        return successResponse(res, 200, comments)
+    } catch (err) {
+        if (err instanceof Error) {
+            return failureResponse(res, 400, err.message)
+        }
+        return failureResponse(res, 400, "An unknown error occurred")
+    }
 })
