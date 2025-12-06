@@ -6,6 +6,7 @@ import { userRouter } from './routes/crudRoutes.ts';
 import cookieParser from 'cookie-parser'
 import envConf from './lib/envConfig.ts'
 import { seedRouter } from './routes/seedRoutes.ts';
+import { globalErrorHandler } from './controllers/errorController.ts';
 
 
 const PORT = envConf.SERVER_PORT;
@@ -16,9 +17,12 @@ const app = express();
 app.use(express.urlencoded())
 app.use(express.json())
 app.use(cookieParser())
+
 app.use("/api/auth", authRouter)
 app.use("/api/user", userRouter)
 app.use("/api/seed", seedRouter)
+app.use(globalErrorHandler)
+
 
 app.listen(PORT, () => {
     console.log("Server started on port: ", PORT)
