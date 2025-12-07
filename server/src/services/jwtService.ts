@@ -33,6 +33,4 @@ export const validateJwt = (accessToken: string, next: NextFunction) => {
     } catch (err) {
         throw next(new CustomError("Failed to verify user, please login again", 401))
     }
-
-
 }

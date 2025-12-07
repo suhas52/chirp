@@ -1,27 +1,9 @@
 import type { NextFunction, Request, Response } from "express";
-import { loginSchema, profileSchema, registerSchema } from "../zodSchemas/authSchemas.ts";
-import bcrypt from 'bcryptjs'
 import { CustomError } from "../lib/customError.ts";
-import { prisma } from "../lib/prismaConfig.ts";
 import { successResponse } from "../lib/response.ts";
-import envConf from "../lib/envConfig.ts";
-import jwt from 'jsonwebtoken'
-
-
 import * as authService from '../services/authService.ts'
 import * as jwtService from "../services/jwtService.ts";
 
-const salt = envConf.SALT;
-const jwtSecret = envConf.JWT_SECRET;
-
-
-
-interface DecodedUser {
-    id: string;
-    username: string;
-    iat: number;
-    exp: number;
-}
 
 export const registerController = async (req: Request, res: Response, next: NextFunction) => {
     const formData = req.body
