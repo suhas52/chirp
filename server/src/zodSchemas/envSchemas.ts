@@ -8,7 +8,8 @@ const envSchema = zod.object({
     BUCKET_NAME: zod.string().min(1),
     BUCKET_REGION: zod.string().min(1),
     ACCESS_KEY: zod.string().min(1),
-    SECRET_ACCESS_KEY: zod.string().min(1)
+    SECRET_ACCESS_KEY: zod.string().min(1),
+    CLIENT_URL: zod.string().min(1)
 })
 
 export { envSchema }

@@ -10,16 +10,3 @@ export function successResponse<T>(
     data
   })
 }
-
-export function failureResponse(
-  res: Response,
-  status: number,
-  message: string,
-  details?: unknown
-) {
-  return res.status(status).json({
-    success: false,
-    message,
-    details: details ?? null
-  });
-}

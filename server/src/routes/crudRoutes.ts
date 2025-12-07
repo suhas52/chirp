@@ -1,7 +1,7 @@
 
 import { Router, type NextFunction, type Request, type Response } from "express";
 import { postSchema } from "../zodSchemas/crudSchemas.ts";
-import { validateInput } from "../lib/validateInput.ts";
+import { validateInput } from "../middleware/validateInputMiddleware.ts";
 import { getAllPostsController, getCommentsByPostIdController, getPostByPostIdController, getPostsByUserIdController, postCommentByPostIdController, postPostController } from "../controllers/crudController.ts";
 
 export const userRouter = Router();

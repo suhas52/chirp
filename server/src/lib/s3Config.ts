@@ -1,5 +1,5 @@
 import { PutObjectCommand, S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl, S3RequestPresigner } from "@aws-sdk/s3-request-presigner";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import envConf from "./envConfig.ts";
 import crypto from "crypto";
 

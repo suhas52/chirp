@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express'
 import type { ZodType } from 'zod';
-import { CustomError } from './customError.ts';
+import { CustomError } from '../lib/customError.ts';
 
 export const validateInput = (schema: ZodType) => (req: Request, res: Response, next: NextFunction) => {
     const parsed = schema.safeParse(req.body);

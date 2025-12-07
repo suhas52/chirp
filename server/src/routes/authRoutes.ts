@@ -2,7 +2,7 @@ import Router from "express";
 import { loginController, logoutController, meController, profileController, registerController, updateAvatarController } from "../controllers/authController.ts";
 import multer from "multer";
 import { registerSchema, loginSchema, profileSchema } from "../zodSchemas/authSchemas.ts";
-import { validateInput } from "../lib/validateInput.ts";
+import { validateInput } from "../middleware/validateInputMiddleware.ts";
 
 const storage = multer.memoryStorage()
 const upload = multer({ storage: storage })

@@ -1,6 +1,5 @@
 import type { Request, Response, NextFunction } from 'express'
 import { CustomError } from '../lib/customError.ts';
-
 import { successResponse } from '../lib/response.ts';
 import * as jwtService from '../services/jwtService.ts'
 import * as crudService from '../services/crudService.ts'
