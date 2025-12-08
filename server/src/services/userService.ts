@@ -1,4 +1,3 @@
-import type { NextFunction } from "express"
 import { profanity } from '@2toad/profanity';
 import { prisma } from "../lib/prismaConfig.ts";
 import { CustomError } from "../lib/customError.ts";
@@ -8,20 +7,24 @@ import { decodeCursor, encodeCursor } from "../lib/encodeCursor.ts";
 
 export const postPostService = async (id: string, formData: any) => {
     if (profanity.exists(formData.content)) throw new CustomError("Profanity is not allowed", 400)
+    try {
+        const newPost = await prisma.post.create({
+            data: {
+                userId: id, ...formData
+            },
+            select: {
+                id: true,
+                content: true,
+                createdAt: true,
+                updatedAt: true,
+                userId: true
+            }
+        })
+        return newPost;
+    } catch (err) {
+        throw new CustomError("Database error", 500)
+    }
 
-    const newPost = await prisma.post.create({
-        data: {
-            userId: id, ...formData
-        },
-        select: {
-            id: true,
-            content: true,
-            createdAt: true,
-            updatedAt: true,
-            userId: true
-        }
-    })
-    return newPost;
 }
 
 export const getAllPostsService = async (take: number, cursor?: string) => {
@@ -35,17 +38,19 @@ export const getAllPostsService = async (take: number, cursor?: string) => {
         const decodedCursor = decodeCursor(cursor)
         query.cursor = { cursorId: decodedCursor }
     }
+    try {
+        const posts = await prisma.post.findMany(query)
+        let nextCursor = null;
+        if (posts.length > take) {
+            const nextItem = posts.pop();
+            nextCursor = nextItem && encodeCursor(nextItem.cursorId);
+        }
 
-    const posts = await prisma.post.findMany(query)
-
-    let nextCursor = null;
-
-    if (posts.length > take) {
-        const nextItem = posts.pop();
-        nextCursor = nextItem && encodeCursor(nextItem.cursorId);
+        return { posts, nextCursor }
+    } catch (err) {
+        throw new CustomError("Database error", 500)
     }
 
-    return { posts, nextCursor }
 }
 
 export const getPostByPostIdService = async (postId: string) => {
@@ -93,7 +98,7 @@ export const postCommentByPostIdService = async (userId: string, postId: string,
     return newComment;
 }
 
-export const getCommentsByPostIdService = async (postId: string, take: number, cursor?: number) => {
+export const getCommentsByPostIdService = async (postId: string, take: number, cursor?: string) => {
     let query: types.CommentQuery = {
         orderBy: { cursorId: 'asc' },
         take: take + 1,
@@ -101,14 +106,15 @@ export const getCommentsByPostIdService = async (postId: string, take: number, c
     }
 
     if (cursor) {
-        query.cursor = { cursorId: cursor }
+        const decodedCursor = decodeCursor(cursor)
+        query.cursor = { cursorId: decodedCursor }
     }
 
     const comments = await prisma.comment.findMany(query)
     let nextCursor = null;
     if (comments.length > take) {
         const nextItem = comments.pop();
-        nextCursor = nextItem?.id;
+        nextCursor = nextItem?.cursorId;
     }
 
     return { comments, nextCursor }

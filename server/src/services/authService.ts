@@ -96,7 +96,7 @@ export const updateAvatarService = async (image: Express.Multer.File, id: string
         })
         return updatedAvatarFileName;
     } catch (err) {
-        throw new CustomEvent("Todo")
+        throw new CustomError("Todo", 400)
     }
 
 }

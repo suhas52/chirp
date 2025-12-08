@@ -57,6 +57,6 @@ export const getCommentsByPostIdController = async (req: Request, res: Response,
     const take = Number(req.query.take) || 10;
     const cursor = req.query.cursor ? String(req.query.cursor) : undefined;
     if (!postId) return next(new CustomError("Invalid request", 400))
-    const comments = userService.getCommentsByPostIdService(postId, take, cursor)
+    const comments = await userService.getCommentsByPostIdService(postId, take, cursor)
     return successResponse(res, 200, comments)
 }
