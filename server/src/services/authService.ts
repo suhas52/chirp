@@ -65,7 +65,7 @@ export const meService = async (id: string) => {
     return { ...user, avatarUrl };
 }
 
-export const updateProfileService = async (id: string, formData: any) => {
+export const updateProfileService = async (id: string, formData: types.profileFormData) => {
     try {
         const modifiedUser = await prisma.user.update({
             where: {

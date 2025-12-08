@@ -1,4 +1,10 @@
-import * as zod from "zod"; 
+import * as zod from "zod";
+
+
+
+
+const nameField = zod.string().min(3, "First Name must be atleast 3 letters").max(10, "First Name must be 10 letters max")
+const usernameField = zod.string().min(4, "Username must be atleast 4 letters").max(15, "Username cannot be over 15 letters")
 
 const password = zod.string().min(8).max(64).refine(p => {
   return (
@@ -10,20 +16,20 @@ const password = zod.string().min(8).max(64).refine(p => {
 }, "Password does not meet complexity requirements");
 
 export const registerSchema = zod.object({
-    firstName: zod.string().min(3).max(10),
-    lastName: zod.string().min(3).max(10),
-    username: zod.string().min(4).max(15),
-    password: password,
+  firstName: nameField,
+  lastName: nameField,
+  username: usernameField,
+  password: password,
 });
 
 export const loginSchema = zod.object({
-    username: zod.string().min(4).max(15),
-    password: zod.string().min(3).max(10)
+  username: usernameField,
+  password: zod.string().min(3).max(10)
 })
 
 export const profileSchema = zod.object({
-    firstName: zod.string().min(3).max(10),
-    lastName: zod.string().min(3).max(10),
+  firstName: nameField,
+  lastName: nameField,
 }).refine(
   (data) => data.firstName !== undefined || data.lastName !== undefined,
   {

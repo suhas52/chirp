@@ -1,3 +1,4 @@
+
 export interface PostQuery {
     take: number,
     orderBy: { cursorId: 'asc' },
@@ -24,4 +25,11 @@ export type registerData = {
 export type loginData = {
     username: string,
     password: string
+}
+
+export type profileFormData = {
+    firstName?: string,
+    lastName?: string,
+    username?: string
+    avatarFileName?: string
 }
