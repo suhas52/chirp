@@ -8,8 +8,6 @@ export const postPostController = async (req: Request, res: Response, next: Next
     const formData = req.body;
     const accessToken = req.cookies.token;
     const decodedUser = req.decodedUser;
-    console.log(decodedUser)
-    if (!accessToken) throw next(new CustomError("User not logged in", 401))
     if (!formData) throw next(new CustomError("Invalid input", 400))
     const newPost = await userService.postPostService(decodedUser.id, formData)
     return successResponse(res, 201, newPost);

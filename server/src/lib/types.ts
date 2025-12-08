@@ -1,4 +1,13 @@
 
+import * as zod from "zod"
+import type { loginSchema, profileSchema, registerSchema } from "../zodSchemas/authSchemas.ts"
+
+export type registerData = zod.infer<typeof registerSchema>
+
+export type loginData = zod.infer<typeof loginSchema>
+
+export type profileFormData = zod.infer<typeof profileSchema>
+
 export interface PostQuery {
     take: number,
     orderBy: { cursorId: 'asc' },
@@ -15,21 +24,10 @@ export interface CommentQuery {
     where?: { postId: string }
 }
 
-export type registerData = {
-    firstName: string,
-    lastName: string,
-    username: string,
-    password: string
-}
 
-export type loginData = {
-    username: string,
-    password: string
-}
-
-export type profileFormData = {
-    firstName?: string,
-    lastName?: string,
-    username?: string
-    avatarFileName?: string
+export interface DecodedUser {
+    id: string;
+    username: string;
+    iat: number;
+    exp: number;
 }

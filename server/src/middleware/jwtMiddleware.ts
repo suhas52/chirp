@@ -2,15 +2,11 @@ import type { NextFunction, Request, Response } from "express";
 import { CustomError } from "../lib/customError.ts";
 import envConf from "../lib/envConfig.ts";
 import jwt from 'jsonwebtoken'
+import type { DecodedUser } from "../lib/types.ts";
 
 const jwtSecret = envConf.JWT_SECRET;
 
-interface DecodedUser {
-    id: string;
-    username: string;
-    iat: number;
-    exp: number;
-}
+
 
 export const validateJwt = () => (req: Request, res: Response, next: NextFunction) => {
 
