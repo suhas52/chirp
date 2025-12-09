@@ -6,21 +6,26 @@ import * as jwtService from "../services/jwtService.ts";
 
 
 export const registerController = async (req: Request, res: Response, next: NextFunction) => {
-    const formData = req.body
-    const newUser = await authService.register(formData)
+    const { body } = req
+    const newUser = await authService.register(body)
     return successResponse(res, 201, newUser)
 }
 
 export const loginController = async (req: Request, res: Response, next: NextFunction) => {
-    const formData = req.body;
-    const user = await authService.login(formData)
+    const { body } = req
+    const user = await authService.login(body)
     const accessToken = jwtService.signJwt({ username: user.username, id: user.id })
-    res.status(200).cookie("token", accessToken, {
+
+    res.cookie("token", accessToken, {
         httpOnly: true,
-        maxAge: 7 * 24 * 60 * 60 * 1000
-    }).json({
-        success: true,
-        data: { id: user.id, username: user.username, firstName: user.firstName, lastName: user.lastName }
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+    })
+
+    return successResponse(res, 200, {
+        id: user.id,
+        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
     })
 }
 
@@ -30,21 +35,20 @@ export const logoutController = async (req: Request, res: Response, next: NextFu
 }
 
 export const meController = async (req: Request, res: Response, next: NextFunction) => {
-    const decodedUser = req.decodedUser;
+    const { decodedUser } = req
     const user = await authService.meService(decodedUser.id)
     return successResponse(res, 200, { ...user })
 }
 
 export const profileController = async (req: Request, res: Response, next: NextFunction) => {
-    const formData = req.body;
-    const decodedUser = req.decodedUser;
-    if (!formData) return next(new CustomError("Invalid input", 400))
-    const modifiedUser = await authService.updateProfileService(decodedUser.id, formData)
-    return successResponse(res, 204, modifiedUser)
+    const { body, decodedUser } = req
+    if (!body) return next(new CustomError("Invalid input", 400))
+    const modifiedUser = await authService.updateProfileService(decodedUser.id, body)
+    return successResponse(res, 200, modifiedUser)
 }
 
 export const updateAvatarController = async (req: Request, res: Response, next: NextFunction) => {
-    const decodedUser = req.decodedUser;
+    const { decodedUser } = req
     const image = req.file;
     if (!image) return next(new CustomError("Image not provided", 400))
     const updatedAvatarFileName = await authService.updateAvatarService(image, decodedUser.id)

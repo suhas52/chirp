@@ -1,7 +1,6 @@
 import bcrypt from 'bcryptjs'
 import { prisma } from '../lib/prismaConfig.ts'
 import envConf from '../lib/envConfig.ts'
-import type { NextFunction } from 'express'
 import { CustomError } from '../lib/customError.ts'
 import sharp from 'sharp';
 import { getSignedImageUrl, uploadToCloud } from "../lib/s3Config.ts";
@@ -51,7 +50,7 @@ export const login = async (data: types.loginData) => {
 
 export const meService = async (id: string) => {
     const user = await prisma.user.findUnique({
-        where: { id: id },
+        where: { id },
         select: {
             id: true,
             firstName: true,
@@ -66,18 +65,16 @@ export const meService = async (id: string) => {
 }
 
 export const updateProfileService = async (id: string, formData: types.profileFormData) => {
-    try {
-        const modifiedUser = await prisma.user.update({
-            where: {
-                id: id
-            },
-            data: formData,
-        })
-        return modifiedUser;
-    } catch (err) {
-        throw new CustomError("Failed to update user details", 400)
+    if (!Object.keys(formData).length) {
+        throw new CustomError("Invalid input", 400)
     }
-
+    const modifiedUser = await prisma.user.update({
+        where: {
+            id: id
+        },
+        data: formData,
+    })
+    return modifiedUser;
 }
 
 export const updateAvatarService = async (image: Express.Multer.File, id: string) => {
@@ -96,7 +93,7 @@ export const updateAvatarService = async (image: Express.Multer.File, id: string
         })
         return updatedAvatarFileName;
     } catch (err) {
-        throw new CustomError("Todo", 400)
+        throw new CustomError("Failed to update avatar", 400)
     }
 
 }
