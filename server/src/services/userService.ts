@@ -3,28 +3,25 @@ import { prisma } from "../lib/prismaConfig.ts";
 import { CustomError } from "../lib/customError.ts";
 import * as types from '../lib/types.ts'
 import { decodeCursor, encodeCursor } from "../lib/encodeCursor.ts";
+import type z from 'zod';
+import type { postSchema } from '../zodSchemas/userSchemas.ts';
 
 
-export const postPostService = async (id: string, formData: any) => {
+export const postPostService = async (id: string, formData: z.infer<typeof postSchema>) => {
     if (profanity.exists(formData.content)) throw new CustomError("Profanity is not allowed", 400)
-    try {
-        const newPost = await prisma.post.create({
-            data: {
-                userId: id, ...formData
-            },
-            select: {
-                id: true,
-                content: true,
-                createdAt: true,
-                updatedAt: true,
-                userId: true
-            }
-        })
-        return newPost;
-    } catch (err) {
-        throw new CustomError("Database error", 500)
-    }
-
+    const newPost = await prisma.post.create({
+        data: {
+            userId: id, ...formData
+        },
+        select: {
+            id: true,
+            content: true,
+            createdAt: true,
+            updatedAt: true,
+            userId: true
+        }
+    })
+    return newPost;
 }
 
 export const getAllPostsService = async (take: number, cursor?: string) => {
@@ -38,18 +35,16 @@ export const getAllPostsService = async (take: number, cursor?: string) => {
         const decodedCursor = decodeCursor(cursor)
         query.cursor = { cursorId: decodedCursor }
     }
-    try {
-        const posts = await prisma.post.findMany(query)
-        let nextCursor = null;
-        if (posts.length > take) {
-            const nextItem = posts.pop();
-            nextCursor = nextItem && encodeCursor(nextItem.cursorId);
-        }
 
-        return { posts, nextCursor }
-    } catch (err) {
-        throw new CustomError("Database error", 500)
+    const posts = await prisma.post.findMany(query)
+    let nextCursor = null;
+    if (posts.length > take) {
+        const nextItem = posts.pop();
+        nextCursor = nextItem && encodeCursor(nextItem.cursorId);
     }
+
+    return { posts, nextCursor }
+
 
 }
 
@@ -86,13 +81,14 @@ export const getPostsByUserIdService = async (userId: string, take: number, curs
     return { posts, nextCursor }
 }
 
-export const postCommentByPostIdService = async (userId: string, postId: string, formData: any) => {
+export const postCommentByPostIdService = async (userId: string, postId: string, formData: z.infer<typeof postSchema>) => {
+    const { content } = formData;
     if (profanity.exists(formData.content)) throw new CustomError("Profanity is not allowed", 400)
     const newComment = await prisma.comment.create({
         data: {
-            userId: userId,
-            postId: postId,
-            content: formData.content
+            userId,
+            postId,
+            content
         }
     })
     return newComment;

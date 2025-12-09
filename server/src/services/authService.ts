@@ -78,22 +78,17 @@ export const updateProfileService = async (id: string, formData: types.profileFo
 }
 
 export const updateAvatarService = async (image: Express.Multer.File, id: string) => {
-    try {
-        if (!allowedFileTypes.includes(image.mimetype)) throw new CustomError("Invalid file type", 400)
-        const processedImageBuffer = await sharp(image.buffer).resize(200).png().toBuffer();
-        const avatarFileName = await uploadToCloud(processedImageBuffer);
-        const updatedAvatarFileName = await prisma.user.update({
-            where: { id: id },
-            data: {
-                avatarFileName: avatarFileName
-            },
-            select: {
-                avatarFileName: true
-            }
-        })
-        return updatedAvatarFileName;
-    } catch (err) {
-        throw new CustomError("Failed to update avatar", 400)
-    }
-
+    if (!allowedFileTypes.includes(image.mimetype)) throw new CustomError("Invalid file type", 400)
+    const processedImageBuffer = await sharp(image.buffer).resize(200).png().toBuffer();
+    const avatarFileName = await uploadToCloud(processedImageBuffer);
+    const updatedAvatarFileName = await prisma.user.update({
+        where: { id: id },
+        data: {
+            avatarFileName: avatarFileName
+        },
+        select: {
+            avatarFileName: true
+        }
+    })
+    return updatedAvatarFileName;
 }

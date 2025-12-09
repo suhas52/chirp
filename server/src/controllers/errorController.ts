@@ -1,4 +1,8 @@
 import type { NextFunction, Request, Response } from "express";
+import { Prisma } from "../generated/prisma/client.ts";
+
+
+
 
 interface CustomError extends Error {
     statusCode?: number;
@@ -11,12 +15,44 @@ export const globalErrorHandler = (
     res: Response,
     next: NextFunction
 ) => {
-    error.statusCode = error.statusCode || 500;
-    error.status = error.status || "error";
+    let statusCode = error.statusCode ?? 500;
+    let message = error.status ?? "Internal server error";
 
-    res.status(error.statusCode).json({
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        const target = error.meta?.modelName
+        switch (error.code) {
+            case "P2002":
+                statusCode = 409;
+                message = `${target} already exists`;
+                break;
+
+            case "P2025":
+                statusCode = 404;
+                message = "Resource not found";
+                break;
+
+            case "P2003":
+                statusCode = 400;
+                message = "Invalid reference";
+                break;
+
+            default:
+                statusCode = 500;
+                message = "Database error";
+        }
+
+    }
+
+    if (error instanceof Prisma.PrismaClientValidationError) {
+        statusCode = 400;
+        message = "Invalid database query";
+    }
+
+
+    res.status(statusCode).json({
         success: false,
-        status: error.statusCode,
-        message: error.message,
+        status: statusCode,
+        message: message,
     });
 };
